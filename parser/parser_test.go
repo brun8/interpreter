@@ -74,40 +74,37 @@ func TestIdentifierExpression(t *testing.T) {
 }
 
 func TestLetStatements(t *testing.T) {
-	input := `
-let x = 5;
-let y = 10;
-let foobar = 838383;
-`
-	l := lexer.New(input)
-	p := New(l)
+  tests := []struct {
+    input string
+    expectedIdentifier string
+    expectedValue interface{}
+  }{
+    {"let x = 5;", "x", 5},
+    {"let y = true;", "y", true},
+    {"let foobar = y;", "foobar", "y"},
+  }
 
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
+  for _, tt := range tests {
+    l := lexer.New(tt.input)
+    p := New(l)
+    program := p.ParseProgram()
+    checkParserErrors(t, p)
 
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
+    if len(program.Statements) != 1 {
+      t.Fatalf("program.Statements does not contain 1 statements. got=%d",
+        len(program.Statements))
+    }
 
-	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements. got=%q",
-			len(program.Statements))
-	}
+    stmt := program.Statements[0]
+    if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+      return
+    }
 
-	tests := []struct {
-		expectedIdentifier string
-	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
-	}
-
-	for i, tt := range tests {
-		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
-			return
-		}
-	}
+    val := stmt.(*ast.LetStatement).Value 
+    if !testLiteralExpression(t, val, tt.expectedValue) {
+      return
+    }
+  }
 }
 
 func TestReturnStatements(t *testing.T) {
@@ -641,6 +638,7 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 			name, letStmt.Name.TokenLiteral())
 		return false
 	}
+
 	return true
 }
 
@@ -650,15 +648,16 @@ func testLiteralExpression(
 	expected interface{},
 ) bool {
 	switch v := expected.(type) {
-	case bool:
-		return testBooleanLiteral(t, exp, v)
 	case int:
 		return testIntegerLiteral(t, exp, int64(v))
 	case int64:
 		return testIntegerLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
+	case bool:
+		return testBooleanLiteral(t, exp, v)
 	}
+	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
 }
 
