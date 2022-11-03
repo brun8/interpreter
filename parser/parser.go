@@ -375,13 +375,13 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		return nil
 	}
 
-  p.nextToken()
+	p.nextToken()
 
-  stmt.Value = p.parseExpression(LOWEST)
+	stmt.Value = p.parseExpression(LOWEST)
 
-  if p.peekTokenIs(token.SEMICOLON) {
-    p.nextToken()
-  }
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 
 	return stmt
 }
@@ -394,13 +394,13 @@ func (p *Parser) noPrefixParseFnOperator(t token.TokenType) {
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	stmt := &ast.ReturnStatement{Token: p.curToken}
 
-  p.nextToken()
+	p.nextToken()
 
-  stmt.ReturnValue = p.parseExpression(LOWEST)
+	stmt.ReturnValue = p.parseExpression(LOWEST)
 
-  if p.peekTokenIs(token.SEMICOLON) {
-    p.nextToken()
-  }
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 
 	return stmt
 }
