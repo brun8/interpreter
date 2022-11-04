@@ -86,22 +86,24 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 
 		return applyFunction(function, args)
 
-  case *ast.StringLiteral:
-    return &object.String{Value: node.Value}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	}
 
 	return nil
 }
 
 func applyFunction(fn object.Object, args []object.Object) object.Object {
-	function, ok := fn.(*object.Function)
-	if !ok {
-		return newError("not a function: %s", fn.Type())
+	switch fn := fn.(type) {
+	case *object.Function:
+		extendedEnv := extendFunctionEnv(fn, args)
+    evaluated := Eval(fn.Body, extendedEnv)
+    return unwrapReturnValue(evaluated)
+	case *object.Builtin:
+		return fn.Fn(args...)
+  default:
+    return newError("not a function: %s", fn.Type())
 	}
-
-	extendedEnv := extendFunctionEnv(function, args)
-	evaluated := Eval(function.Body, extendedEnv)
-	return unwrapReturnValue(evaluated)
 }
 
 func extendFunctionEnv(
@@ -144,11 +146,15 @@ func evalIdentifier(
 	node *ast.Identifier,
 	env *object.Environment,
 ) object.Object {
-	val, ok := env.Get(node.Value)
-	if !ok {
-		return newError("identifier not found: %s", node.Value)
+	if val, ok := env.Get(node.Value); ok {
+		return val
 	}
-	return val
+
+	if builtin, ok := builtins[node.Value]; ok {
+		return builtin
+	}
+
+	return newError("identifier not found: " + node.Value)
 }
 
 func isError(obj object.Object) bool {
@@ -244,19 +250,19 @@ func evalInfixExpression(
 }
 
 func evalStringInfixExpression(
-  operator string,
-  left, right object.Object,
+	operator string,
+	left, right object.Object,
 ) object.Object {
-  leftVal := left.(*object.String).Value
-  rightVal := right.(*object.String).Value
+	leftVal := left.(*object.String).Value
+	rightVal := right.(*object.String).Value
 
-  switch operator {
-  case "+":
-    return &object.String{Value: leftVal + rightVal}
+	switch operator {
+	case "+":
+		return &object.String{Value: leftVal + rightVal}
 	default:
 		return newError("unknown operator: %s %s %s",
 			left.Type(), operator, right.Type())
-  }
+	}
 }
 
 func evalIntegerInfixExpression(
