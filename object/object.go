@@ -3,6 +3,7 @@ package object
 import (
 	"bytes"
 	"fmt"
+	"hash/fnv"
 	"monkey/ast"
 	"strings"
 )
@@ -120,5 +121,23 @@ func (ao *Array) Inspect() string {
   return out.String()
 }
 
+type Hash struct {
+  Pairs map[Object]Object
+}
 
+type HashKey struct {
+  Type ObjectType
+  Value uint64
+}
+
+func (b *Boolean) HashKey() HashKey {
+  var value uint64
+
+  if b.Value {
+    value = 1
+  } else {
+    value = 0
+  }
+
+}
 

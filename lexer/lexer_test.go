@@ -26,6 +26,7 @@ if (5 < 10) {
 "foobar"
 "foo bar"
 varrr[1,2];
+{"foo": "bar"}
 `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -113,6 +114,11 @@ varrr[1,2];
 		{token.INT, "2"},
 		{token.RBRACKET, "]"},
 		{token.SEMICOLON, ";"},
+    {token.LBRACE, "{"},
+    {token.STRING, "foo"},
+    {token.COLON, ":"},
+    {token.STRING, "bar"},
+    {token.RBRACE, "}"},
 		{token.EOF, ""},
 	}
 
